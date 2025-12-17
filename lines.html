@@ -1,0 +1,77 @@
+<html>
+  <body>
+   <canvas id="c" width="800" height="600"></canvas>
+    <script>
+	const C = document.getElementById("c").getContext("2d");
+	const W = C.canvas.width;
+	const H = C.canvas.height;
+
+	const x0 = W / 2;
+	const y0 = H / 2;
+	const point = 50; // pixels per unit
+
+	// Գույներ (գծերը դարձված են կարմիր)
+	const axesXColor = { r: 0, g: 0, b: 0 }; 
+	const axesYColor = { r: 0, g: 0, b: 0 };
+	const linesColor = { r: 1, g: 0, b: 0 }; // կարմիր գծեր
+
+	const I = C.getImageData(0, 0, W, H);
+	drawFrame(I.data);
+	C.putImageData(I, 0, 0);
+
+	// Նկարում է ամբողջ canvas-ը՝ հաշվելով յուրաքանչյուր փիքսելի գույնը
+	function drawFrame(D){
+	  for(let y=0,i=0;y<H;y++){
+	    for(let x=0;x<W;x++){
+	      const p=getPixel(x,y);
+	      D[i++]=p.r*255;
+	      D[i++]=p.g*255;
+	      D[i++]=p.b*255;
+	      D[i++]=p.a*255;
+	    }
+	  }
+	}
+
+	// Վերադարձնում է տվյալ (x,y) փիքսելի գույնը ըստ գրաֆիկի կանոնների
+	function getPixel(x,y){
+	  const X = (x - x0) / point;
+	  const Y = (y0 - y) / point;
+	
+	  const bg = { r:1,g:1,b:1,a:1 };
+	  const line = aColoredLine(X,Y,2,3,0.1,linesColor);
+	  const axesX = aColoredLine(X,Y,0,0,0.05,axesXColor);
+	  const axesY = aColoredLine(X,Y,Infinity,0,0.05,axesYColor);
+	  const line2 = aColoredLine(Y,X,2,3,0.1,linesColor);
+	  const line3 = aColoredLine(X,Y,1,0,0.075,linesColor);
+	  const grid = net(X,Y,0.01);
+
+	  if(line.a>0) return line;
+	  if(axesX.a>0) return axesX;
+	  if(axesY.a>0) return axesY;
+	  if(line2.a>0) return line2;
+	  if(line3.a>0) return line3;
+	  if(grid.a>0) return grid;
+	  return bg;
+	}
+
+	// Նկարում է ցանցը (կոորդինատային վանդակները)
+	function net(x,y,epsilon){
+	  for(let n=-W/(2*point);n<=W/(2*point);n++){
+	    if(Math.abs(x-n)<epsilon) return {r:0,g:0,b:0,a:0.3};
+	  }
+	  for(let m=-H/(2*point);m<=H/(2*point);m++){
+	    if(Math.abs(y-m)<epsilon) return {r:0,g:0,b:0,a:0.3};
+	  }
+	  return {r:0,g:0,b:0,a:0};
+	}
+
+	// Ստուգում է՝ արդյոք կետը գտնվում է y = kx + b ուղիղի վրա
+	function aColoredLine(x,y,k,b,epsilon,color){
+	  let onLine;
+	  if(k===Infinity) onLine = Math.abs(x-b)<epsilon;
+	  else onLine = Math.abs(y-(k*x+b))<epsilon;
+	  return {r:color.r,g:color.g,b:color.b,a:onLine?1:0};
+	}
+  </script>
+ </body>
+</html>
