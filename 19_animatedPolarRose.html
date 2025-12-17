@@ -1,0 +1,20 @@
+<canvas id="c" width=600 height=600></canvas>
+<script>
+const cx=300,cy=300,c=document.getElementById('c'),ctx=c.getContext('2d');
+let t=0;
+function aBlueCircle(x,y,sx,sy,r){return `hsl(${(x+y+t*50)%360},100%,50%)`}
+function backgroundPattern(x,y){return 'black'}
+function overlay(a,b){return a}
+function getPixel(x,y){return overlay(aBlueCircle(x,y,300,340,50), backgroundPattern(x,y))}
+function draw(){
+    ctx.fillStyle='black'; ctx.fillRect(0,0,600,600);
+    for(let a=0;a<t;a+=0.002){
+        let r=150*Math.cos(3*a),x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+        ctx.fillStyle=getPixel(x,y); ctx.fillRect(x,y,2,2);
+    }
+    t+=0.02; if(t>6.28) t=0;
+    requestAnimationFrame(draw);
+}
+draw();
+</script>
+
