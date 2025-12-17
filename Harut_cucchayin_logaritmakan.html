@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+ <body>
+  <canvas id='c' width="800" height="600"></canvas>
+  <script>
+	  const C = document.getElementById('c').getContext('2d');
+	  const W = C.canvas.width;
+	  const H = C.canvas.height;
+	  const point = 20;
+	  const epsilon = 0.05;
+	  const x0 = W / 2;
+	  const y0 = H / 2;
+
+	  const I = C.createImageData(W, H);
+	  drawFrame(I.data);
+	  C.putImageData(I, 0, 0);
+
+	function drawFrame(D) {
+  	 let i = 0;
+  	 for (let y = 0; y < H; y++) {
+   	  for (let x = 0; x < W; x++) {
+     	  const X = (x - x0) / point;
+     	  const Y = (y0 - y) / point;
+     	  const p = getPixel(X, Y);
+     	  D[i++] = p.r * 255;
+     	  D[i++] = p.g * 255;
+     	  D[i++] = p.b * 255;
+     	  D[i++] = p.a * 255;
+   	  }
+ 	 }
+	}
+
+	function getPixel(x, y) {
+	  let p = backgroundPattern(x, y);
+
+	  const graphLine = aRedLine(x, y, 1, 0, 0.1);
+	  const expF = expo(x, y, 2);
+	  const invExpF = inverseExpo(x, y, 2);
+	  const axisX = aRedLine(x, y, 0, 0, epsilon);
+	  const axisY = aRedLine(y, x, 0, 0, epsilon);
+
+
+	  if (axisX.a > 0) p = axisX;
+	  if (axisY.a > 0) p = axisY;
+	  if (graphLine.a > 0) p = graphLine;
+	  if (expF.a > 0) p = expF;
+	  if (invExpF.a > 0) p = invExpF;
+	  return p;
+	}
+
+
+	function backgroundPattern(x, y) {
+	  return { r: 0, g: 0, b: 0, a: 0 };
+	}
+
+
+	function aRedLine(x, y, k, b, eps = epsilon) {
+	  const onLine = Math.abs(y - (k * x + b)) < eps;
+	  return { r: 0, g: 0.5, b: 1, a: onLine ? 1 : 0 };
+	}
+
+
+	function expo(x, y, a) {
+	  const yOnCurve = Math.pow(a, x);
+	  const onCurve = Math.abs(y - yOnCurve) < epsilon;
+	  return { r: 0, g: 0.5, b: 1, a: onCurve ? 1 : 0 };
+	}
+
+	function inverseExpo(x, y, a) {
+	  const xOnCurve = Math.pow(a, y);
+	  const onCurve = Math.abs(x - xOnCurve) < epsilon;
+	  return { r: 0, g: 0.5, b: 1, a: onCurve ? 1 : 0 };
+	}
+
+  </script>
+ </body>
+</html>
+
