@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="utf-8">
+<title>ASCII Image HD</title>
+<style>
+body {
+  background: #fff;
+  font-family: monospace;
+  padding: 20px;
+  text-align: center;
+}
+#asciiContainer {
+  margin-top: 20px;
+  background: white;
+  padding: 20px;
+  display: inline-block;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ccc;
+}
+#asciiOutput {
+  font-family: monospace;
+  font-size: 7px;
+  line-height: 7px;
+  white-space: pre;
+}
+</style>
+</head>
+<body>
+<h2>ASCII Art Generator — HD</h2>
+<input type="file" id="fileInput" accept="image/*">
+<div id="asciiContainer">
+<pre id="asciiOutput"></pre>
+</div>
+<script>
+const fileInput = document.getElementById("fileInput");
+const asciiOutput = document.getElementById("asciiOutput");
+const symbols = ["@", "%", "#", "W", "M", "8", "B", "&", "$", "0", "Q", "Z", "O", "A", "H", "R", "U", "K", "X", "N", "E", "m", "n", "b", "d", "h", "k", "q", "w", "x", "y", "u", "v", "r", "t", "f", "j", "c", "l", "i", "!", ";", "+", "=", "~", "^", ":", ",", ".", "1", "2", "3", "4", "5", "6", "7", "9", "C", "D", "F", "G", "I", "a", "J", "L", "M", "S", "T", "V", "X", "Y", "Z", "e", "g", "o", "p", "r", "s", "z", " ", "…", "‹", "•", "–", "˜", "™", "›", "¡", "¨", "«", "¯", '"', "'", "`", "´", "·", "¸", "»"];
+function getSymbolDarkness(symbol){
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = 20;
+  canvas.height = 20;
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,20,20);
+  ctx.fillStyle = "black";
+  ctx.font = "20px monospace";
+  ctx.fillText(symbol,0,18);
+  const data = ctx.getImageData(0,0,20,20).data;
+  let dark = 0;
+  for(let i=0;i<data.length;i+=4){
+    if(data[i]<128) dark++;
+  }
+  return dark;
+}
+let table = symbols.map(s=>({symbol:s,darkness:getSymbolDarkness(s)}));
+table.sort((a,b)=>b.darkness-a.darkness);
+function grayToASCII(gray){
+  const t = gray/255;
+  const i = Math.floor(t*(table.length-1));
+  return table[i].symbol;
+}
+fileInput.addEventListener("change",()=>{
+  const file=fileInput.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>processImage(e.target.result);
+  reader.readAsDataURL(file);
+});
+function processImage(src){
+  const img=new Image();
+  img.onload=()=>{
+    const width=275;
+    const hRatio=img.height/img.width;
+    const height=Math.floor(width*hRatio*0.5);
+    const canvas=document.createElement("canvas");
+    canvas.width=width;
+    canvas.height=height;
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,width,height);
+    const data=ctx.getImageData(0,0,width,height).data;
+    let ascii="";
+    for(let y=0;y<height;y++){
+      for(let x=0;x<width;x++){
+        const i=(y*width+x)*4;
+        const r=data[i];
+        const g=data[i+1];
+        const b=data[i+2];
+        const gray=0.299*r+0.587*g+0.114*b;
+        ascii+=grayToASCII(gray);
+      }
+      ascii+="\n";
+    }
+    asciiOutput.textContent=ascii;
+  }
+  img.src=src;
+}
+</script>
+</body>
+</html>
+
